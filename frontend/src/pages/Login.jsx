@@ -3,7 +3,9 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
+
 const API = import.meta.env.VITE_API_URL;
+
 const Login = () => {
   const [currentState, setCurrentState] = useState("Sign Up");
   const [name, setName] = useState("");
@@ -11,46 +13,45 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
-  const { setCartItems } = useContext(ShopContext); // 🔁 access to update cart
+  const { setCartItems } = useContext(ShopContext);
 
   const onSubmitHandler = async (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
 
     try {
-      let res;
-
       if (currentState === "Login") {
-        // 🔐 LOGIN API
-        res = await axios.post(`${API}/api/user/login`, {
-          email,
-          password,
-        }); 
+        // 🔐 LOGIN
+        const res = await axios.post(`${API}/api/user/login`, { email, password });
         toast.success("Login Successful ✅");
+
+        const { token } = res.data;
+        localStorage.setItem("token", token);
+
+        // 🔁 Fetch cart
+        const userRes = await axios.get(`${API}/api/user/userData`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const { cartData } = userRes.data;
+        setCartItems(cartData);
+        localStorage.setItem("cartItems", JSON.stringify(cartData));
+
+        navigate("/");
       } else {
-        // 📝 SIGNUP API
-        res = await axios.post(`${API}/api/user/register`, {
+        // 📝 SIGNUP
+        await axios.post(`${API}/api/user/register`, {
           name,
           email,
           password,
         });
-        toast.success("Signup Successful 🎉");
+
+        toast.success("Signup Successful 🎉 Please login to continue.");
+
+        // Reset password and name, keep email for convenience
+        setName("");
+        setPassword("");
+        setCurrentState("Login");
       }
-
-      const { token } = res.data;
-      localStorage.setItem("token", token); // Save token
-
-      // 🔁 FETCH USER CART DATA AFTER LOGIN
-      const userRes = await axios.get(`${API}/api/user/userData`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const { cartData } = userRes.data;
-      setCartItems(cartData); // 🔁 Sync cart to frontend
-      localStorage.setItem("cartItems", JSON.stringify(cartData)); // Optional: persist cart
-
-      navigate("/");
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong ❌");
     }
