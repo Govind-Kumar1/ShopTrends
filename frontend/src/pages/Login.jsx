@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
-
+const API = import.meta.env.VITE_API_URL;
 const Login = () => {
   const [currentState, setCurrentState] = useState("Sign Up");
   const [name, setName] = useState("");
@@ -21,14 +21,14 @@ const Login = () => {
 
       if (currentState === "Login") {
         // 🔐 LOGIN API
-        res = await axios.post("http://localhost:5000/api/user/login", {
+        res = await axios.post(`${API}/api/user/login`, {
           email,
           password,
         }); 
         toast.success("Login Successful ✅");
       } else {
         // 📝 SIGNUP API
-        res = await axios.post("http://localhost:5000/api/user/register", {
+        res = await axios.post(`${API}/api/user/register`, {
           name,
           email,
           password,
@@ -40,7 +40,7 @@ const Login = () => {
       localStorage.setItem("token", token); // Save token
 
       // 🔁 FETCH USER CART DATA AFTER LOGIN
-      const userRes = await axios.get("http://localhost:5000/api/user/userData", {
+      const userRes = await axios.get(`${API}/api/user/userData`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
