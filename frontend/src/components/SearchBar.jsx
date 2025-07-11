@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
-import { assets } from '../assets/assets';
+ 
 import { useLocation } from 'react-router-dom';
-
+import search_icon from "../assets/search_icon.png"
 const SearchBar = () => {
 
     const {search, setSearch, showSearch, setShowSearch} = useContext(ShopContext);
@@ -26,7 +26,7 @@ const SearchBar = () => {
                 className='flex-1 text-sm outline-none bg-inherit' 
                 type="text" placeholder='Search...' 
             />
-            <img className='w-4' src={assets.search_icon} alt="Search" />
+            <img className='w-4' src={search_icon} alt="Search" />
         </div>
         <img 
             onClick={() => setShowSearch(false)} 

@@ -1,5 +1,4 @@
 import { createContext, useEffect, useState } from "react";
-// import { products } from "../assets/assets";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -7,7 +6,6 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
   const [products, setProducts] = useState([]);
-
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});
@@ -16,35 +14,35 @@ const ShopContextProvider = (props) => {
   const currency = "$";
   const delivery_fee = 10;
 
-  // // ✅ Load cart items from localStorage on first render
-  // useEffect(() => {
-  //   const storedCartItems = JSON.parse(localStorage.getItem("cartItems"));
-  //   if (storedCartItems) {
-  //     setCartItems(storedCartItems);
-  //   }
-  // }, []);
+ const API = import.meta.env.VITE_API_URL;
 
+
+  // ✅ Fetch products from deployed backend
   useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/product/list");
-      const data = await response.json();
-      setProducts(data.products); // adjust based on your backend's response structure
-    } catch (err) {
-      console.error("Failed to fetch products:", err);
-    }
-  };
+    if (!API) return;
 
-  fetchProducts();
-}, []);
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API}/api/product/list`);
+        const data = await response.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      }
+    };
 
-  // ✅ Sync cart with localStorage + backend (if logged in)
+    fetchProducts();
+  }, [API]);
+
+  // ✅ Sync cart to localStorage and backend if logged in
   useEffect(() => {
+    if (!API) return;
+
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
 
-    const token = localStorage.getItem("token"); 
+    const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://localhost:5000/api/user/add", {
+      fetch(`${API}/api/user/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,7 +51,7 @@ const ShopContextProvider = (props) => {
         body: JSON.stringify({ cartData: cartItems }),
       }).catch((err) => console.error("Failed to sync cart:", err));
     }
-  }, [cartItems]);
+  }, [cartItems, API]);
 
   const addToCart = async (itemId, size) => {
     if (!size) {
@@ -66,14 +64,9 @@ const ShopContextProvider = (props) => {
     let cartData = structuredClone(cartItems);
 
     if (cartData[itemId]) {
-      if (cartData[itemId][size]) {
-        cartData[itemId][size] += 1;
-      } else {
-        cartData[itemId][size] = 1;
-      }
+      cartData[itemId][size] = (cartData[itemId][size] || 0) + 1;
     } else {
-      cartData[itemId] = {};
-      cartData[itemId][size] = 1;
+      cartData[itemId] = { [size]: 1 };
     }
 
     setCartItems(cartData);
@@ -83,11 +76,9 @@ const ShopContextProvider = (props) => {
     let totalCount = 0;
     for (const items in cartItems) {
       for (const item in cartItems[items]) {
-        try {
-          if (cartItems[items][item] > 0) {
-            totalCount += cartItems[items][item];
-          }
-        } catch (error) {}
+        if (cartItems[items][item] > 0) {
+          totalCount += cartItems[items][item];
+        }
       }
     }
     return totalCount;
@@ -107,12 +98,12 @@ const ShopContextProvider = (props) => {
     let totalAmount = 0;
     for (const items in cartItems) {
       let itemInfo = products.find((product) => product._id === items);
-      for (const item in cartItems[items]) {
-        try {
+      if (itemInfo) {
+        for (const item in cartItems[items]) {
           if (cartItems[items][item] > 0) {
             totalAmount += itemInfo.price * cartItems[items][item];
           }
-        } catch (error) {}
+        }
       }
     }
     return totalAmount;
@@ -132,7 +123,7 @@ const ShopContextProvider = (props) => {
     showSearch,
     setShowSearch,
     cartItems,
-    setCartItems, // ✅ Needed for login cart sync
+    setCartItems,
     addToCart,
     getCartCount,
     updateQuantity,
@@ -147,4 +138,3 @@ const ShopContextProvider = (props) => {
 };
 
 export default ShopContextProvider;
- 

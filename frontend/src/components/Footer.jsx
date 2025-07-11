@@ -1,5 +1,5 @@
 import React from 'react'
-import { assets } from '../assets/assets'
+import logo from "../assets/logo.png"
 import { Link } from 'react-router-dom'
 
 const Footer = () => {
@@ -8,7 +8,7 @@ const Footer = () => {
         <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm'>
             <div>
                 <Link to='/'>
-                    <img src={assets.logo} className='w-32 mb-5 cursor-pointer' alt="ShopTrends" />
+                    <img src={logo} className='w-32 mb-5 cursor-pointer' alt="ShopTrends" />
                 </Link>
                 <p className='w-full text-gray-600 md:w-2/3'>Thank you for shopping with ShopTrends! We're dedicated to bringing you the latest trends and top-quality products. Follow us on social media for updates on new arrivals, exclusive offers, and more. If you have any questions or need assistance, our friendly customer support team is here to help. Subscribe to our newsletter for special discounts and be the first to know about our latest promotions. Your style journey starts here—let's make it unforgettable!</p>
             </div>
