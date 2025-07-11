@@ -9,7 +9,7 @@ import userModel from "../models/userModel.js";
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET);
 };
-
+ 
 // INFO: Controller to get user details like cart, orders, etc.
 const getUserData = async (req, res) => {
   try {

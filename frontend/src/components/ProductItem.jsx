@@ -16,10 +16,10 @@ const ProductItem = ({ id, image, name, price }) => {
           />
         </div>
       </div>
-      <p className="pt-3 pb-1 text-sm">{name}</p>
+      <p className="pt-3 pb-1 text-sm">{name}</p> 
       <p className="text-sm font-medium">
         {currency}&nbsp;
-        {price.toLocaleString(undefined, {
+        {price.toLocaleString(undefined, { 
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}
