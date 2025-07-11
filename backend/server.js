@@ -10,7 +10,7 @@ import productRouter from "./routes/productRoute.js";
 const app = express();
 const port = process.env.PORT || 5000;
 connectDB(); 
- 
+  
   
 // INFO: Middleware
 app.use(express.json()); 

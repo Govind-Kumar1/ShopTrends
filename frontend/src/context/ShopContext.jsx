@@ -14,10 +14,9 @@ const ShopContextProvider = (props) => {
   const currency = "$";
   const delivery_fee = 10;
 
- const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL;
 
-
-  // ✅ Fetch products from deployed backend
+  // ✅ Fetch products from backend
   useEffect(() => {
     if (!API) return;
 
@@ -34,25 +33,26 @@ const ShopContextProvider = (props) => {
     fetchProducts();
   }, [API]);
 
-  // ✅ Sync cart to localStorage and backend if logged in
-  useEffect(() => {
-    if (!API) return;
-
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
+  // ✅ Sync cart to backend
+  const syncCartToBackend = async (cartData) => {
     const token = localStorage.getItem("token");
-    if (token) {
-      fetch(`${API}/api/user/add`, {
+    if (!token || !API) return;
+
+    try {
+      await fetch(`${API}/api/user/addItem`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ cartData: cartItems }),
-      }).catch((err) => console.error("Failed to sync cart:", err));
+        body: JSON.stringify({ cartData }),
+      });
+    } catch (error) {
+      console.error("Failed to sync cart:", error);
     }
-  }, [cartItems, API]);
+  };
 
+  // ✅ Add to Cart
   const addToCart = async (itemId, size) => {
     if (!size) {
       toast.error("Please Select a Size");
@@ -70,8 +70,32 @@ const ShopContextProvider = (props) => {
     }
 
     setCartItems(cartData);
+    localStorage.setItem("cartItems", JSON.stringify(cartData));
+    await syncCartToBackend(cartData);
   };
 
+  // ✅ Update Quantity
+  const updateQuantity = async (itemId, size, quantity) => {
+    if (quantity === 0) {
+      toast.success("Item Removed From The Cart");
+    }
+
+    let cartData = structuredClone(cartItems);
+    cartData[itemId][size] = quantity;
+
+    setCartItems(cartData);
+    localStorage.setItem("cartItems", JSON.stringify(cartData));
+    await syncCartToBackend(cartData);
+  };
+
+  // ✅ Clear Cart
+  const clearCart = async () => {
+    setCartItems({});
+    localStorage.removeItem("cartItems");
+    await syncCartToBackend({});
+  };
+
+  // ✅ Get Cart Count
   const getCartCount = () => {
     let totalCount = 0;
     for (const items in cartItems) {
@@ -84,16 +108,7 @@ const ShopContextProvider = (props) => {
     return totalCount;
   };
 
-  const updateQuantity = async (itemId, size, quantity) => {
-    if (quantity === 0) {
-      toast.success("Item Removed From The Cart");
-    }
-
-    let cartData = structuredClone(cartItems);
-    cartData[itemId][size] = quantity;
-    setCartItems(cartData);
-  };
-
+  // ✅ Get Cart Amount
   const getCartAmount = () => {
     let totalAmount = 0;
     for (const items in cartItems) {
@@ -109,11 +124,7 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   };
 
-  const clearCart = () => {
-    setCartItems({});
-    localStorage.removeItem("cartItems");
-  };
-
+  // ✅ All values to export
   const value = {
     products,
     currency,
@@ -121,7 +132,7 @@ const ShopContextProvider = (props) => {
     search,
     setSearch,
     showSearch,
-    setShowSearch,
+    setShowSearch, 
     cartItems,
     setCartItems,
     addToCart,

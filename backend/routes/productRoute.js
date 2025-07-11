@@ -12,7 +12,7 @@ import { verifyAdmin } from "../middleware/verifyAdmin.js";
 const productRouter = express.Router();
 
 productRouter.post(
-  "/add",
+  "/addItem",
   (req, res, next) => {
     console.log("✅ Route hit: /add");
     next();
