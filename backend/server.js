@@ -2,44 +2,41 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import connectDB from "./config/mongodb.js";
-import "./config/cloudinary.js"; // 🔄 auto-configure Cloudinary
+import "./config/cloudinary.js";
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 
-// INFO: Create express app
 const app = express();
 const port = process.env.PORT || 5000;
-connectDB(); 
-  
-  
-// INFO: Middleware
-app.use(express.json()); 
-app.use(cors());
- 
+connectDB();
+
+// ✅ Middleware
+app.use(express.json());
+
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://shop-trends-zynz.vercel.app/",
   "http://localhost:5174",
-  "https://shoptrends.vercel.app" // ✅ your frontend URL
+  "https://shoptrends.vercel.app"
 ];
- 
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
 
-
-// INFO: API endpoints 
+// ✅ Routes
 app.use("/api/user", userRouter);
-app.use("/api/product", productRouter); 
+app.use("/api/product", productRouter);
 
-// INFO: Default route
-// app.get("/", (req, res) => {
-//   res.send("API is running...");
-// });
-
-// INFO: Start server
+// ✅ Start server
 app.listen(port, () =>
   console.log(`Server is running on at http://localhost:${port}`)
 );

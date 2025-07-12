@@ -9,21 +9,21 @@ import {
 import upload from "../middleware/multer.js";
 import adminAuth from "../middleware/adminAuth.js";
 import { verifyAdmin } from "../middleware/verifyAdmin.js";
-
-const productRouter = express.Router();
-
+ 
+const productRouter = express.Router();  
+ 
 // ✅ Add Product Route (admin only)
-productRouter.post(
+productRouter.post( 
   "/addItem",
   adminAuth, // 🔐 Decode token & attach to req.user
   verifyAdmin, // 🔍 Check admin privileges
   upload.fields([
     { name: "image1", maxCount: 1 },
-    { name: "image2", maxCount: 1 },
-    { name: "image3", maxCount: 1 },
+    { name: "image2", maxCount: 1 }, 
+    { name: "image3", maxCount: 1 }, 
     { name: "image4", maxCount: 1 },
   ]),
-  (req, res, next) => {
+  (req, res, next) => { 
     console.log("✅ Route hit: /api/product/addItem");
     next();
   },

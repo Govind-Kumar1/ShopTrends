@@ -80,7 +80,7 @@ const listProducts = async (req, res) => {
     const products = await productModel.find({});
     res.status(200).json({ success: true, products });
   } catch (error) {
-    console.log("Error while fetching all products: ", error);
+    console.log("Error while fetching all products: ", error); 
     res.status(500).json({ success: false, message: error.message });
   }
 };
