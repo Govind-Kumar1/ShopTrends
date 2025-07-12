@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-
+import { backendUrl} from '../App.jsx'
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
+    description: "", 
     price: "",
     category: "",
     subCategory: "",
@@ -60,7 +60,7 @@ const AddProduct = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/product/add",
+        `${backendUrl}/api/product/addItem`,
         data,
         {
           headers: {
