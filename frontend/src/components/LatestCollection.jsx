@@ -9,9 +9,12 @@ const LatestCollection = () => {
 
   useEffect(() => {
     if (products.length > 0) {
-      setLatestProducts(products.slice(0, 10));
+      // ✅ Shuffle and pick 10 random products
+      const shuffled = [...products].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, 10);
+      setLatestProducts(selected);
     }
-  }, [products]); // ✅ Watch for product updates
+  }, [products]);
 
   return (
     <div className="my-10">
@@ -40,3 +43,4 @@ const LatestCollection = () => {
 };
 
 export default LatestCollection;
+    
