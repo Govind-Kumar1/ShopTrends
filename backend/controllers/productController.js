@@ -3,14 +3,11 @@ import productModel from "../models/productModel.js";
 import streamifier from "streamifier";
 
 // ✅ Route to add a new product (admin only)
-
-
-
-// 📤 Helper: Upload buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer) => { 
+// Upload buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { resource_type: "image" },
+      { resource_type: "image", folder: "products" },
       (error, result) => {
         if (error) reject(error);
         else resolve(result.secure_url);
@@ -20,7 +17,7 @@ const uploadToCloudinary = (fileBuffer) => {
   });
 };
 
-// ✅ Route to add a new product (admin only)
+
 const addProduct = async (req, res) => {
   try {
     const {
@@ -33,15 +30,15 @@ const addProduct = async (req, res) => {
       bestSeller,
     } = req.body;
 
-    // 🔍 Check for required fields
+    // Required field check
     if (!name || !description || !price || !category || !subCategory || !sizes) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // ✅ Handle uploaded images from memory
+    // Image upload from memory buffer
     const uploadedImages = ["image1", "image2", "image3", "image4"]
       .map((key) => req.files[key]?.[0])
-      .filter(Boolean); // only present images
+      .filter(Boolean);
 
     let imageUrls = [];
 
@@ -51,7 +48,7 @@ const addProduct = async (req, res) => {
       );
     }
 
-    // ✅ Create product data
+    // Create product
     const productData = {
       name,
       description,
@@ -77,9 +74,8 @@ const addProduct = async (req, res) => {
   }
 };
 
-
  
-const listProducts = async (req, res) => {
+const listProducts = async (req, res) => { 
   try {
     const products = await productModel.find({});
     res.status(200).json({ success: true, products });
