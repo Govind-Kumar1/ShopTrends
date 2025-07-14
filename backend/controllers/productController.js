@@ -84,16 +84,41 @@ const listProducts = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-const removeProduct = async (req, res) => {
-  try {
-    await productModel.findByIdAndDelete(req.body.id);
-    res.status(200).json({ success: true, message: "Product removed" });
-  } catch (error) {
-    console.log("Error while removing product: ", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
+// ✅ Helper: Extract public_id from Cloudinary URL
+const extractPublicId = (url) => {
+  const parts = url.split("/");
+  const fileWithExt = parts[parts.length - 1];
+  const publicId = fileWithExt.substring(0, fileWithExt.lastIndexOf(".")); // remove .jpg or .png
+  return `${parts[parts.length - 2]}/${publicId}`; // folder/filename
 };
 
+// ✅ Remove Product Controller
+export const removeProduct = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const product = await productModel.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // 🧹 Delete Cloudinary images
+    const deletePromises = product.image.map(async (imgUrl) => {
+      const publicId = extractPublicId(imgUrl);
+      return cloudinary.uploader.destroy(publicId);
+    });
+
+    await Promise.all(deletePromises); // Wait for all deletes
+
+    // 🗑️ Delete from DB
+    await productModel.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: "✅ Product deleted from DB & Cloudinary" });
+  } catch (error) {
+    console.error("❌ Delete error:", error);
+    res.status(500).json({ success: false, message: "Server error during delete" });
+  }
+};
 // INFO: Route for fetching a single product
 const getSingleProduct = async (req, res) => {
   try {

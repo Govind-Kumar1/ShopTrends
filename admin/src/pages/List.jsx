@@ -9,24 +9,28 @@ const List = ({ token }) => {
   const fetchListProducts = async () => {
     try {
       const response = await axios.get(`${backendUrl}/api/product/list`);
- 
+
       if (response.data.success) {
-        setListProducts(response.data.products); 
+        setListProducts(response.data.products);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
-      toast.error(response.data.message);
+      toast.error("❌ Error while fetching products");
     }
   };
 
   const removeProduct = async (id) => {
     try {
       const response = await axios.post(
-        backendUrl + "/api/product/remove",
+        `${backendUrl}/api/product/remove`,
         { id },
-        { headers: { token } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
@@ -37,7 +41,7 @@ const List = ({ token }) => {
       }
     } catch (error) {
       console.error(error);
-      toast.error(response.data.message);
+      toast.error("❌ Failed to delete product");
     }
   };
 
@@ -58,13 +62,14 @@ const List = ({ token }) => {
           <b>Price</b>
           <b className="text-center">Action</b>
         </div>
+
         {/* Display Products */}
         {listProducts.map((item, index) => (
           <div
             className="grid grid-cols-[0.5fr_1fr_1.5fr_0.5fr_0.5fr_0.5fr_0.2fr] md:grid-cols-[0.5fr_1fr_1.5fr_0.5fr_0.5fr_0.5fr_0.2fr] items-center gap-2 py-1 px-2 border text-sm text-center"
             key={index}
           >
-            <img className="w-12" src={item.image[0]} alt="Product Image" />
+            <img className="w-12" src={item.image[0]} alt="Product" />
             <p className="text-left">{item.name}</p>
             <p className="text-left">{item.description}</p>
             <p>{item.category}</p>
@@ -72,9 +77,9 @@ const List = ({ token }) => {
             <p>{currency(item.price)}</p>
             <p
               onClick={() => removeProduct(item._id)}
-              className="font-bold text-center text-gray-800 bg-red-500 rounded-full cursor-pointer md:text-center max-w-7"
+              className="font-bold text-center text-white bg-red-500 rounded-full cursor-pointer md:text-center max-w-7 px-2"
             >
-              X
+              ❌
             </p>
           </div>
         ))}
