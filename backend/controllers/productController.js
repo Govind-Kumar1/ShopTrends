@@ -69,7 +69,7 @@ const addProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    console.error("❌ Error while adding product:", error);
+    console.error("❌Error while adding product:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

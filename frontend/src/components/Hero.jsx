@@ -11,7 +11,7 @@ const slides = [
     subtitle: 'Up to 70% OFF',
     description: 'Best deals on fashion, electronics, and more!',
   },
-  {
+  { 
     image:  hero2, 
     title: 'Trending Now',
     subtitle: 'Latest Styles',
