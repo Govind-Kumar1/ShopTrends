@@ -93,7 +93,7 @@ const extractPublicId = (url) => {
 };
 
 // ✅ Remove Product Controller
-export const removeProduct = async (req, res) => {
+ const removeProduct = async (req, res) => {
   try {
     const { id } = req.body;
 
