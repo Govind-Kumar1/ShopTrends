@@ -16,46 +16,47 @@ const Login = () => {
   const { setCartItems } = useContext(ShopContext);
 
   const onSubmitHandler = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    try {
-      if (currentState === "Login") {
-        // 🔐 LOGIN
-        const res = await axios.post(`${API}/api/user/login`, { email, password });
-        toast.success("Login Successful ✅");
+  try {
+    if (currentState === "Login") {
+      // 🔐 LOGIN
+      await axios.post(
+        `${API}/api/user/login`,
+        { email, password },
+        { withCredentials: true } // 👈 SEND COOKIE TO BACKEND
+      );
 
-        const { token } = res.data;
-        localStorage.setItem("token", token);
+      toast.success("Login Successful ✅");
 
-        // 🔁 Fetch cart
-        const userRes = await axios.get(`${API}/api/user/userData`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      // 🔁 Fetch user data (no Authorization header needed)
+      const userRes = await axios.get(`${API}/api/user/userData`, {
+        withCredentials: true, // 👈 FETCH COOKIE
+      });
 
-        const { cartData } = userRes.data;
-        setCartItems(cartData);
-        localStorage.setItem("cartItems", JSON.stringify(cartData));
+      const { cartData } = userRes.data;
+      setCartItems(cartData);
+      localStorage.setItem("cartItems", JSON.stringify(cartData));
 
-        navigate("/");
-      } else {
-        // 📝 SIGNUP
-        await axios.post(`${API}/api/user/register`, {
-          name,
-          email,
-          password,
-        });
+      navigate("/");
+    } else {
+      // 📝 SIGNUP
+      await axios.post(
+        `${API}/api/user/register`,
+        { name, email, password },
+        { withCredentials: true } // 👈 so backend can set cookie
+      );
 
-        toast.success("Signup Successful 🎉 Please login to continue.");
-
-        // Reset password and name, keep email for convenience
-        setName("");
-        setPassword("");
-        setCurrentState("Login");
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong ❌");
+      toast.success("Signup Successful 🎉 Please login to continue.");
+      setName("");
+      setPassword("");
+      setCurrentState("Login");
     }
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Something went wrong ❌");
+  }
+};
+
 
   return (
     <form
