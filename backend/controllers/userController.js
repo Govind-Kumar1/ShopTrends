@@ -13,15 +13,21 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (await userModel.findOne({ email })) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     if (!validator.isEmail(email)) {
       return res.status(400).json({ success: false, message: "Invalid email" });
     }
+
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+    }
+
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,7 +46,7 @@ const registerUser = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "Lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
       .json({
@@ -53,8 +59,8 @@ const registerUser = async (req, res) => {
         },
       });
   } catch (error) {
-    console.log("Error while registering user:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Register Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -62,8 +68,12 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await userModel.findOne({ email });
 
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Please enter email and password" });
+    }
+
+    const user = await userModel.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ success: false, message: "Invalid email or password" });
     }
@@ -88,34 +98,29 @@ const loginUser = async (req, res) => {
         },
       });
   } catch (error) {
-    console.log("Error while logging in user:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Login Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 // ✅ Logout User
 const logoutUser = (req, res) => {
-  res.clearCookie("token").status(200).json({
-    success: true,
-    message: "Logged out successfully",
-  });
+  res
+    .clearCookie("token")
+    .status(200)
+    .json({ success: true, message: "Logged out successfully" });
 };
 
-// ✅ Get User Data (auth check)
+// ✅ Get User Data (via cookie token)
 const getUserData = async (req, res) => {
   try {
     const token = req.cookies.token;
-
-    if (!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
+    if (!token) return res.status(401).json({ success: false, message: "Unauthorized: No token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await userModel.findById(decoded.id);
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
     res.status(200).json({
       success: true,
@@ -128,8 +133,8 @@ const getUserData = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error while fetching user data:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("❌ UserData Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -149,8 +154,8 @@ const updateCart = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Cart updated successfully" });
   } catch (error) {
-    console.log("Error updating cart:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ UpdateCart Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -167,20 +172,17 @@ const getCartData = async (req, res) => {
 
     res.status(200).json({ success: true, cartData: user.cartData || {} });
   } catch (error) {
-    console.log("Error fetching cart data:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ GetCart Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// ⚠️ Admin Login — still uses token in response
+// ✅ Admin Login (no cookie)
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (email !== adminEmail || password !== adminPassword) {
-      return res.status(401).json({ success: false, message: "Invalid email or password" });
+    if (email !== process.env.ADMIN_EMAIL || password !== process.env.ADMIN_PASSWORD) {
+      return res.status(401).json({ success: false, message: "Invalid admin credentials" });
     }
 
     const token = jwt.sign({ email, isAdmin: true }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -189,14 +191,11 @@ const loginAdmin = async (req, res) => {
       success: true,
       message: "Admin login successful",
       token,
-      admin: {
-        email,
-        isAdmin: true,
-      },
+      admin: { email, isAdmin: true },
     });
   } catch (error) {
-    console.log("Error while logging in admin:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("❌ AdminLogin Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -207,5 +206,5 @@ export {
   updateCart,
   getCartData,
   loginAdmin,
-  getUserData,
+  getUserData, 
 };
