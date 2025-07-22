@@ -26,14 +26,14 @@ const NavBar = () => {
     token,
     setToken
   } = useContext(ShopContext);
-
+console.log(token)
   const handleLogout = () => {
     localStorage.removeItem("token");
     setToken(null); // Update the global context state, triggering a re-render
     clearCart();
     toast.success("Logged out successfully 👋");
     navigate("/");
-  };
+  }; 
 
   return (
     <>

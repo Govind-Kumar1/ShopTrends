@@ -40,6 +40,8 @@ const registerUser = async (req, res) => {
     });
 
     const token = createToken(user._id);
+    console.log(token);
+    
 
     res
       .cookie("token", token, {
@@ -77,8 +79,11 @@ const loginUser = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ success: false, message: "Invalid email or password" });
     }
+console.log(user._id);
 
     const token = createToken(user._id);
+    console.log(token);
+    
 
     res
       .cookie("token", token, {
@@ -95,6 +100,7 @@ const loginUser = async (req, res) => {
           name: user.name,
           email: user.email,
           cartData: user.cartData,
+          token:token
         },
       });
   } catch (error) {

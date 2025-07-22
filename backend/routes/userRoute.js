@@ -18,6 +18,7 @@ userRouter.post("/admin", loginAdmin);
 // ✅ Protected Routes
 userRouter.post("/update-cart", authMiddleware, updateCart);
 userRouter.get("/get-cart", authMiddleware, getCartData);
-userRouter.get("/userData", authMiddleware, getUserData);
-
+userRouter.get("/userData", getUserData);
+ 
 export default userRouter;
+ 

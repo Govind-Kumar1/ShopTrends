@@ -9,7 +9,7 @@ const ShopContextProvider = (props) => {
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});
-  const [token, setToken] = useState(null); // ✅ Added token state
+const [token, setToken] = useState(() => localStorage.getItem("token"));
   const navigate = useNavigate();
 
   const currency = "$";
@@ -37,9 +37,12 @@ const ShopContextProvider = (props) => {
   // ✅ Load token & cart from localStorage on mount
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
+    console.log(savedToken);
+    
     if (savedToken) {
       setToken(savedToken);
     }
+    console.log("Token from localStorage:", savedToken); 
 
     const savedCart = localStorage.getItem("cartItems");
     if (savedCart) {

@@ -13,50 +13,59 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
-  const { setCartItems } = useContext(ShopContext);
+  const { setCartItems,setToken  } = useContext(ShopContext);
 
   const onSubmitHandler = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  try {
-    if (currentState === "Login") {
-      // 🔐 LOGIN
-      await axios.post(
-        `${API}/api/user/login`,
-        { email, password },
-        { withCredentials: true } // 👈 SEND COOKIE TO BACKEND
-      );
+    try {
+      if (currentState === "Login") {
+        // 🔐 LOGIN
+        const loginRes = await axios.post(
+          `${API}/api/user/login`,
+          { email, password },
+          { withCredentials: true }
+        );
 
-      toast.success("Login Successful ✅");
+        // ✅ Save token to localStorage
+        // console.log(loginRes);
+        
+        const token = loginRes.data.user.token;
+        if (token) {
+          // console.log(token);
+          localStorage.setItem("token", token);
+          setToken (token);
+        }
 
-      // 🔁 Fetch user data (no Authorization header needed)
-      const userRes = await axios.get(`${API}/api/user/userData`, {
-        withCredentials: true, // 👈 FETCH COOKIE
-      });
+        toast.success("Login Successful ✅");
 
-      const { cartData } = userRes.data;
-      setCartItems(cartData);
-      localStorage.setItem("cartItems", JSON.stringify(cartData));
+        // 🔁 Fetch user data
+        const userRes = await axios.get(`${API}/api/user/userData`, {
+          withCredentials: true,
+        });
 
-      navigate("/");
-    } else {
-      // 📝 SIGNUP
-      await axios.post(
-        `${API}/api/user/register`,
-        { name, email, password },
-        { withCredentials: true } // 👈 so backend can set cookie
-      );
+        const { cartData } = userRes.data;
+        setCartItems(cartData);
+        localStorage.setItem("cartItems", JSON.stringify(cartData));
 
-      toast.success("Signup Successful 🎉 Please login to continue.");
-      setName("");
-      setPassword("");
-      setCurrentState("Login");
+        navigate("/");
+      } else {
+        // 📝 SIGNUP
+        await axios.post(
+          `${API}/api/user/register`,
+          { name, email, password },
+          { withCredentials: true }
+        );
+
+        toast.success("Signup Successful 🎉 Please login to continue.");
+        setName("");
+        setPassword("");
+        setCurrentState("Login");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Something went wrong ❌");
     }
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Something went wrong ❌");
-  }
-};
-
+  };
 
   return (
     <form
@@ -113,8 +122,8 @@ const Login = () => {
       <button className="px-8 py-2 mt-4 font-light text-white bg-black">
         {currentState === "Login" ? "Sign In" : "Sign Up"}
       </button>
-    </form> 
+    </form>
   );
 };
 
-export default Login;
+export default Login; 
