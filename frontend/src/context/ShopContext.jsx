@@ -9,6 +9,7 @@ const ShopContextProvider = (props) => {
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});
+  const [token, setToken] = useState(null); // ✅ Added token state
   const navigate = useNavigate();
 
   const currency = "$";
@@ -16,7 +17,7 @@ const ShopContextProvider = (props) => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  // ✅ Fetch products from backend
+  // ✅ Fetch products on mount
   useEffect(() => {
     if (!API) return;
 
@@ -33,9 +34,21 @@ const ShopContextProvider = (props) => {
     fetchProducts();
   }, [API]);
 
+  // ✅ Load token & cart from localStorage on mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) {
+      setToken(savedToken);
+    }
+
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
+    }
+  }, []);
+
   // ✅ Sync cart to backend
   const syncCartToBackend = async (cartData) => {
-    const token = localStorage.getItem("token");
     if (!token || !API) return;
 
     try {
@@ -124,7 +137,7 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   };
 
-  // ✅ All values to export
+  // ✅ Context Values
   const value = {
     products,
     currency,
@@ -132,19 +145,23 @@ const ShopContextProvider = (props) => {
     search,
     setSearch,
     showSearch,
-    setShowSearch, 
+    setShowSearch,
     cartItems,
     setCartItems,
     addToCart,
-    getCartCount,
     updateQuantity,
-    getCartAmount,
     clearCart,
+    getCartCount,
+    getCartAmount,
+    token,        // ✅ Exported
+    setToken,     // ✅ Exported
     navigate,
   };
 
   return (
-    <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>
+    <ShopContext.Provider value={value}>
+      {props.children}
+    </ShopContext.Provider>
   );
 };
 

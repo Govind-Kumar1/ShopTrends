@@ -5,6 +5,7 @@ import connectDB from "./config/mongodb.js";
 import "./config/cloudinary.js";
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -12,8 +13,9 @@ connectDB();
 
 // ✅ Middleware
 app.use(express.json());
+app.use(cookieParser()); // ✅ to read cookies from request
 
-const allowedOrigins = [
+const allowedOrigins = [ 
   "http://localhost:5173",
   "http://localhost:5174", 
   "https://shop-trends-zynz.vercel.app",

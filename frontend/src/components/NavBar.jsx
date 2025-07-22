@@ -18,16 +18,18 @@ const NavBar = () => {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
 
+  // Destructure token and setToken from context for reactive state management
   const {
     clearCart,
     setShowSearch,
-    getCartCount
+    getCartCount,
+    token,
+    setToken
   } = useContext(ShopContext);
-
-  const token = localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    setToken(null); // Update the global context state, triggering a re-render
     clearCart();
     toast.success("Logged out successfully 👋");
     navigate("/");
@@ -50,9 +52,9 @@ const NavBar = () => {
             <p>HOME</p>
           </NavLink>
           <NavLink to='/product/list' className='flex flex-col items-center gap-1'>
-            <p>COLLECTION</p> 
+            <p>COLLECTION</p>
           </NavLink>
-          <NavLink to='/about' className='flex flex-col items-center gap-1'> 
+          <NavLink to='/about' className='flex flex-col items-center gap-1'>
             <p>ABOUT</p>
           </NavLink>
           <NavLink to='/contact' className='flex flex-col items-center gap-1'>
@@ -75,6 +77,7 @@ const NavBar = () => {
             <img src={profile_icon} className='w-5 cursor-pointer' alt="Profile" />
             <div className='absolute right-0 pt-4 hidden group-hover:block'>
               <div className='flex flex-col gap-2 px-5 py-3 text-gray-500 rounded w-36 bg-slate-100 shadow-md'>
+                {/* UI now correctly reacts to changes in the token from context */}
                 {token ? (
                   <>
                     <p className='cursor-pointer hover:text-black'>Profile</p>
