@@ -54,6 +54,10 @@ const Product = () => {
   if (status === 'failed' || !product) {
     return <div className='py-20 text-center text-red-500'>Error: {error || 'Product not found.'}</div>;
   }
+if (!product) {
+  // If product is null or undefined, stop here and show a loading/error message.
+  return <div>Loading Product...</div>;
+}
 
   return (
     <div className='pt-10 transition-opacity duration-500 ease-in border-t-2 opacity-100'>
@@ -146,11 +150,14 @@ const Product = () => {
         </div>
       </div>
 
-      <RelatedProducts
-        category={product.category}
-        subCategory={product.subCategory}
-        currentProductId={product._id}
-      />
+      {product && product.category && product.subCategory && product._id && (
+  <RelatedProducts
+    category={product.category}
+    subCategory={product.subCategory}
+    currentProductId={product._id}
+  />
+)}
+
     </div>
   );
 };

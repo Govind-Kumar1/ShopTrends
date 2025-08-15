@@ -1,31 +1,32 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// ✅ YEH LINE ADD KARNI HAI
+// ✅ API URL from env
 const API = import.meta.env.VITE_API_URL;
-//console.log("API URL:", API); // ✅ YEH CONSOLE LOG ADD KAREIN
-// THUNK TO FETCH A SINGLE PRODUCT BY ID
+
+// THUNK: Fetch single product by ID
 export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
   async (productId, thunkAPI) => {
     try {
-      console.log("Fetching product ID:", productId); // Debug
+      console.log("Fetching product ID:", productId);
       const response = await fetch(`${API}/api/product/${productId}`);
-      
+
       if (!response.ok) {
         throw new Error(`Product not found or server error: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log("Full product data:", data);
-      return data;
+      // console.log("Full product data:", data);
+
+      // Return the actual product object
+      return data.product;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
 
-
-// THUNK TO FETCH ALL PRODUCTS
+// THUNK: Fetch all products
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, thunkAPI) => {
@@ -41,7 +42,6 @@ export const fetchProducts = createAsyncThunk(
     }
   }
 );
-
 
 const productsSlice = createSlice({
   name: 'products',
@@ -59,7 +59,7 @@ const productsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Cases for fetchProducts
+      // fetchProducts cases
       .addCase(fetchProducts.pending, (state) => {
         state.status = 'loading';
       })
@@ -71,13 +71,14 @@ const productsSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      // Cases for fetchProductById
+
+      // fetchProductById cases
       .addCase(fetchProductById.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentProduct = action.payload;
+        state.currentProduct = action.payload; // ✅ Sirf product object store ho raha hai
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.status = 'failed';
