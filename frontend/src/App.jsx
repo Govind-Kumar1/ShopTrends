@@ -30,9 +30,9 @@ const App = () => {
 
   // ✅ Fetch initial data when the app loads
   useEffect(() => {
-    dispatch(fetchProducts()); // Fetch all products
+    dispatch(fetchProducts()); // Fetch all products 
     if (token) {
-      dispatch(fetchCart()); // Fetch user's cart if logged in
+      dispatch(fetchCart(token)); // Fetch user's cart if logged in
     }
   }, [dispatch, token]); // Rerun if token changes (e.g., on login)
 

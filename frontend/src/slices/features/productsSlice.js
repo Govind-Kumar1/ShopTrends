@@ -8,7 +8,7 @@ export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
   async (productId, thunkAPI) => {
     try {
-      console.log("Fetching product ID:", productId);
+    //  console.log("Fetching product ID:", productId);
       const response = await fetch(`${API}/api/product/${productId}`);
 
       if (!response.ok) {

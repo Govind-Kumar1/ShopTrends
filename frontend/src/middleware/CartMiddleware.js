@@ -1,32 +1,31 @@
-// src/middleware/cartMiddleware.js
+// File: src/middleware/CartMiddleware.js
 
 const API = import.meta.env.VITE_API_URL;
 
-// Function to sync the cart with the backend
 const syncCartToBackend = async (cartData, token) => {
   if (!token || !API) return;
-
   try {
-    await fetch(`${API}/api/user/addItem`, {
+    await fetch(`${API}/api/user/update-cart`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ cartData }), // Ensure your backend expects this structure
+      body: JSON.stringify({ cartData }),
     });
+    // ✅ DEBUG: Let's see if the sync function is successful
+  //  console.log("Cart sync request sent to backend."); 
   } catch (error) {
     console.error("Failed to sync cart:", error);
-    // Optionally, dispatch an error action here
   }
 };
 
-
 export const cartMiddleware = (store) => (next) => (action) => {
-  // Let the action pass through to the reducer first
+  // ✅ DEBUG: This will run for EVERY action you dispatch.
+  //console.log("Cart Middleware received action:", action.type);
+
   const result = next(action);
 
-  // Check if the action is one of the cart actions we care about
   const cartActions = [
     "cart/addToCart",
     "cart/updateQuantity",
@@ -34,21 +33,18 @@ export const cartMiddleware = (store) => (next) => (action) => {
   ];
 
   if (cartActions.includes(action.type)) {
-    // Get the updated state
+    // ✅ DEBUG: This will only run if the action is a cart action.
+   // console.log("Action is a cart action. Preparing to sync...");
+
     const state = store.getState();
-    const { cartItems } = state.cart;
+    const { items } = state.cart;
     const { token } = state.user;
 
-    // Perform side effects
-    if (Object.keys(cartItems).length > 0) {
-      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    if (token) {
+      syncCartToBackend(items, token);
     } else {
-      // If the cart is empty, remove the item from storage
-      localStorage.removeItem("cartItems");
+      console.log("No token found, cannot sync cart.");
     }
-
-    // Sync with the backend
-    syncCartToBackend(cartItems, token);
   }
 
   return result;

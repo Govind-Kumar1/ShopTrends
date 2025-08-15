@@ -1,32 +1,29 @@
+// File: src/middleware/authMiddleware.js (Final Corrected Code)
+
 import jwt from "jsonwebtoken";
-import userModel from "../models/userModel.js";
 
 const authMiddleware = async (req, res, next) => {
+  const { authorization } = req.headers;
+
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "Not authorized, login again" });
+  }
+
   try {
-    // ✅ Get token from Authorization header
-    const authHeader = req.headers.authorization;
+    const token = authorization.split(" ")[1];
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
-    }
+    // ✅ FIX: jwt.verify returns the payload directly.
+    // The payload is the object we signed: { id: user._id }
+    const decodedPayload = jwt.verify(token, process.env.JWT_SECRET);
 
-    const token = authHeader.split(" ")[1]; // remove "Bearer " prefix
+    // We get the id from the decoded payload.
+    req.userId = decodedPayload.id;
 
-    // ✅ Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // ✅ Find user
-    const user = await userModel.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ success: false, message: "User not found" });
-    }
-
-    req.user = user;
     next();
   } catch (error) {
-    console.error("Auth Middleware Error:", error.message);
-    return res.status(401).json({ success: false, message: "Unauthorized access" });
+    console.error("Authentication Error:", error.message);
+    res.status(401).json({ success: false, message: "Authorization failed, invalid token" });
   }
-}; 
+};
 
 export default authMiddleware;
