@@ -1,39 +1,42 @@
-import React, { useContext, useEffect } from "react";
-import { ShopContext } from "../context/ShopContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import search_icon from "../assets/search_icon.png";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux"; // ✅ Import Redux hooks
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const SearchBar = () => {
-  const {
-    search,
-    setSearch,
-    showSearch,
-    setShowSearch,
-    products,
-  } = useContext(ShopContext);
+// ✅ Import Redux actions
+import { setSearch, setShowSearch } from "../slices/features/uiSlice";
 
+// ✅ Assets
+import search_icon from "../assets/search_icon.png";
+
+const SearchBar = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+
+  // ✅ Get state from the Redux store
+  const { search, showSearch } = useSelector((state) => state.ui);
+  const { list: products } = useSelector((state) => state.products);
 
   // 🧠 When user types & presses Enter
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      const matched = products.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
+      const trimmedSearch = search.trim().toLowerCase();
 
-      if (search.trim() === "") {
+      if (trimmedSearch === "") {
         toast.warn("Please enter something to search.");
         return;
       }
+
+      const matched = products.filter((item) =>
+        item.name.toLowerCase().includes(trimmedSearch)
+      );
 
       if (matched.length === 0) {
         toast.error("No matching products found.");
       }
 
-      setShowSearch(false);       // close search overlay
-      navigate("/product/list");  // go to collection page
+      dispatch(setShowSearch(false)); // ✅ Dispatch action to close search overlay
+      navigate("/product/list");      // Go to collection page to show results
     }
   };
 
@@ -47,7 +50,7 @@ const SearchBar = () => {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => dispatch(setSearch(e.target.value))} // ✅ Dispatch action on change
             onKeyDown={handleKeyDown}
             placeholder="Search for products..."
             className="flex-1 p-2 border border-gray-300 rounded text-sm outline-none"
@@ -56,7 +59,7 @@ const SearchBar = () => {
         </div>
 
         <button
-          onClick={() => setShowSearch(false)}
+          onClick={() => dispatch(setShowSearch(false))} // ✅ Dispatch action to close
           className="absolute top-3 right-3 text-xl text-gray-500 hover:text-black"
         >
           ✖

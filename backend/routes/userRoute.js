@@ -7,8 +7,9 @@ import {
   getCartData,
   getUserData,
 } from "../controllers/userController.js";
+ 
 import authMiddleware from "../middleware/authMiddleware.js"; // ✅ Import it
-
+// import { verifyUser } from "../middleware/auth.js";
 const userRouter = express.Router();
 
 userRouter.post("/register", registerUser);
@@ -18,7 +19,7 @@ userRouter.post("/admin", loginAdmin);
 // ✅ Protected Routes
 userRouter.post("/update-cart", authMiddleware, updateCart);
 userRouter.get("/get-cart", authMiddleware, getCartData);
-userRouter.get("/userData", getUserData);
+userRouter.get("/userData",authMiddleware, getUserData);
  
 export default userRouter;
  

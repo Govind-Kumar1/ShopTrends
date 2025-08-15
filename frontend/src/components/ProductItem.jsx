@@ -1,9 +1,8 @@
-import React, { useContext } from "react";
-import { ShopContext } from "../context/ShopContext";
+import React from "react";
 import { Link } from "react-router-dom";
 
 const ProductItem = ({ id, image, name, price }) => {
-  const { currency } = useContext(ShopContext);
+  const currency = "$"; // ✅ Defined as a simple constant
 
   return (
     <Link className="text-gray-700 cursor-pointer" to={`/product/${id}`}>
@@ -13,13 +12,13 @@ const ProductItem = ({ id, image, name, price }) => {
             className="w-full h-full object-cover transition-transform duration-300 ease-in-out hover:scale-110"
             src={image[0]}
             alt={name}
-          />
+          /> 
         </div>
       </div>
-      <p className="pt-3 pb-1 text-sm">{name}</p> 
+      <p className="pt-3 pb-1 text-sm">{name}</p>
       <p className="text-sm font-medium">
         {currency}&nbsp;
-        {price.toLocaleString(undefined, { 
+        {price.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}

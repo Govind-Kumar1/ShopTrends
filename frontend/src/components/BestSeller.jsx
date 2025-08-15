@@ -1,18 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
-import { ShopContext } from "../context/ShopContext";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux"; // ✅ Import the useSelector hook
 import Title from "./Title";
 import ProductItem from "./ProductItem";
 
 const BestSeller = () => {
-  const { products } = useContext(ShopContext);
+  // ✅ Get the products list from the Redux store
+  const { list: products } = useSelector((state) => state.products);
   const [bestSeller, setBestSeller] = useState([]);
 
   useEffect(() => {
     if (products.length > 0) {
-      const bestProduct = products.filter((item) => item.bestSeller); // ✅ Fixed spelling
-      setBestSeller(bestProduct.slice(0, 5));
+      const bestProducts = products.filter((item) => item.bestSeller);
+      setBestSeller(bestProducts.slice(0, 5));
     }
-  }, [products]); // ✅ Added dependency
+  }, [products]); // The dependency now correctly refers to the products from Redux
 
   return (
     <div className="my-10">

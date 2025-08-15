@@ -1,111 +1,35 @@
-import React, { useContext, useEffect, useState } from "react";
-import { ShopContext } from "../context/ShopContext";
-import Title from "../components/Title";
-import ProductItem from "../components/ProductItem";
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+// Import Redux actions and the new selector
+import { toggleCategory, toggleSubCategory, setSort, clearFilters } from '../slices/features/filterSlice';
+import { selectFilteredProducts } from '../selectors/productSelectors';
+
+// Import Components and Assets
+import Title from '../components/Title';
+import ProductItem from '../components/ProductItem';
 import dropdown_icon from '../assets/dropdown_icon.png';
-import SearchBar from "../components/SearchBar";
 
 const Collection = () => {
-  const { products, search, showSearch } = useContext(ShopContext);
+  const dispatch = useDispatch();
+
   const [showFilter, setShowFilter] = useState(false);
-  const [filterProducts, setFilterProducts] = useState([]);
-  const [category, setCategory] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
-  const [sortType, setSortType] = useState("relevant");
 
-  const toggleCategory = (e) => {
-    if (category.includes(e.target.value)) {
-      setCategory((prev) => prev.filter((item) => item !== e.target.value));
-    } else {
-      setCategory((prev) => [...prev, e.target.value]);
-    }
-  };
-
-  const toggleSubCategory = (e) => {
-    if (subCategory.includes(e.target.value)) {
-      setSubCategory((prev) => prev.filter((item) => item !== e.target.value));
-    } else {
-      setSubCategory((prev) => [...prev, e.target.value]);
-    }
-  };
-
-  const applyFilter = () => {
-  let productsCopy = [...products];
-
-  // 🔍 Search filter (Always apply if search is not empty)
-  if (search.trim() !== "") {
-    productsCopy = productsCopy.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-
-  // ✅ Category filter
-  if (category.length > 0) {
-    productsCopy = productsCopy.filter((item) =>
-      category.includes(item.category)
-    );
-  }
-
-  // ✅ Sub-category filter
-  if (subCategory.length > 0) {
-    productsCopy = productsCopy.filter((item) =>
-      subCategory.includes(item.subCategory)
-    );
-  }
-
-  setFilterProducts(productsCopy);
-};
-
-
-  const sortProduct = () => {
-    let sorted = [...filterProducts];
-
-    switch (sortType) {
-      case "low-high":
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case "high-low":
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        applyFilter();
-        return;
-    }
-
-    setFilterProducts(sorted);
-  };
-
-  const clearFilters = () => {
-    setCategory([]);
-    setSubCategory([]);
-  };
-
-  useEffect(() => {
-    applyFilter();
-  }, [products, search, showSearch, category, subCategory]);
-
-  useEffect(() => {
-    sortProduct();
-  }, [sortType]);
+  // ✅ Get the final list of products with just one line!
+  const filteredProducts = useSelector(selectFilteredProducts); 
+  
+  // ✅ Get the current filter state to manage the UI (e.g., checked checkboxes)
+  const { category, subCategory } = useSelector((state) => state.filters);
 
   return (
     <>
-      {/* ✅ Search Bar at Top */}
-      <SearchBar />
-
+      {/* SearchBar is already in App.jsx, so it can be removed if duplicated */}
       <div className="flex flex-col gap-1 pt-10 border-t sm:flex-row sm:gap-10">
         {/* Filters */}
         <div className="min-w-60">
-          <p
-            onClick={() => setShowFilter(!showFilter)}
-            className="flex items-center gap-2 my-2 text-xl cursor-pointer"
-          >
+          <p onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 my-2 text-xl cursor-pointer">
             FILTERS
-            <img
-              className={`h-3 sm:hidden ${showFilter ? "rotate-90" : ""}`}
-              src={dropdown_icon}
-              alt="Dropdown"
-            />
+            <img className={`h-3 sm:hidden ${showFilter ? "rotate-90" : ""}`} src={dropdown_icon} alt="Dropdown" />
           </p>
 
           {/* Category Filters */}
@@ -118,7 +42,7 @@ const Collection = () => {
                     type="checkbox"
                     className="w-3"
                     value={cat}
-                    onChange={toggleCategory}
+                    onChange={() => dispatch(toggleCategory(cat))}
                     checked={category.includes(cat)}
                   />
                   {cat}
@@ -137,7 +61,7 @@ const Collection = () => {
                     type="checkbox"
                     className="w-3"
                     value={sub}
-                    onChange={toggleSubCategory}
+                    onChange={() => dispatch(toggleSubCategory(sub))}
                     checked={subCategory.includes(sub)}
                   />
                   {sub}
@@ -146,10 +70,7 @@ const Collection = () => {
             </div>
           </div>
 
-          <button
-            onClick={clearFilters}
-            className={`px-4 py-2 mt-1 text-white bg-black rounded hover:bg-gray-900 ${showFilter ? "block" : "hidden"} sm:block`}
-          >
+          <button onClick={() => dispatch(clearFilters())} className={`px-4 py-2 mt-1 text-white bg-black rounded hover:bg-gray-900 ${showFilter ? "block" : "hidden"} sm:block`}>
             Clear Filters
           </button>
         </div>
@@ -158,10 +79,7 @@ const Collection = () => {
         <div className="flex-1">
           <div className="flex justify-between mb-4 text-base sm:text-2xl">
             <Title text1="ALL" text2="COLLECTIONS" />
-            <select
-              onChange={(e) => setSortType(e.target.value)}
-              className="px-2 text-sm border-2 border-gray-300"
-            >
+            <select onChange={(e) => dispatch(setSort(e.target.value))} className="px-2 text-sm border-2 border-gray-300">
               <option value="relevant">Sort by: Relevant</option>
               <option value="low-high">Sort by: Low to High</option>
               <option value="high-low">Sort by: High to Low</option>
@@ -169,11 +87,11 @@ const Collection = () => {
           </div>
 
           {/* Render Filtered Products */}
-          {filterProducts.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <p className="text-center text-gray-500">No products found.</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 gap-y-6">
-              {filterProducts.map((item) => (
+              {filteredProducts.map((item) => (
                 <ProductItem
                   key={item._id}
                   id={item._id}
@@ -184,7 +102,7 @@ const Collection = () => {
               ))}
             </div>
           )}
-        </div>
+        </div> 
       </div>
     </>
   );

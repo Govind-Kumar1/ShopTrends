@@ -1,37 +1,32 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { ShopContext } from '../context/ShopContext';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
+// Import the new selector and the update action
+import { selectCartDetails } from '../selectors/cartSelectors';
+import { updateQuantity } from '../slices/features/cartSlice';
+
+// Import Components and Assets
 import Title from '../components/Title';
 import CartTotal from '../components/CartTotal';
- // Make sure this path is correct
-import bin_icon from '../assets/bin_icon.png'; // Import the bin icon
+import bin_icon from '../assets/bin_icon.png';
+
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity, navigate } = useContext(ShopContext);
-  const [cartData, setCartData] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // ✅ CHANGE 1: useEffect ko update karein
-  useEffect(() => {
-    // Ab yeh `products` ka intezaar nahi karega.
-    // Jaise hi cartItems milega, yeh code chal jaayega.
-    const tempData = [];
-    if (cartItems) {
-      for (const items in cartItems) {
-        for (const item in cartItems[items]) {
-          if (cartItems[items][item] > 0) {
-            tempData.push({
-              _id: items,
-              size: item,
-              quantity: cartItems[items][item],
-            });
-          }
-        }
-      }
-    }
-    setCartData(tempData);
-  }, [cartItems]); // ✅ CHANGE 2: Dependency se 'products' ko hata dein
+  // ✅ Get fully detailed cart data directly using the new selector
+  const cartDetails = useSelector(selectCartDetails);
+  const currency = '$'; // Define as a constant
 
-  const isCartEmpty = cartData.length === 0;
+  const isCartEmpty = cartDetails.length === 0;
 
-  // Agar cart khaali hai toh message dikhayein
+  // Handler for updating quantity
+  const handleUpdateQuantity = (itemId, size, newQuantity) => {
+    dispatch(updateQuantity({ itemId, size, quantity: newQuantity }));
+  };
+
+  // If cart is empty, show message
   if (isCartEmpty) {
     return (
       <div className='border-t pt-14 text-center min-h-[50vh] flex flex-col justify-center items-center'>
@@ -53,44 +48,36 @@ const Cart = () => {
         <Title text1={'YOUR'} text2={'CART'} />
       </div>
       <div>
-        {cartData.map((item, index) => {
-          const productData = products.find((product) => product._id === item._id);
-
-          // Yeh check ab bhi zaroori hai. Yeh item ko tab tak nahi dikhayega jab tak uski product details load na ho jayein.
-          if (!productData) {
-            return null;
-          }
-
-          return (
-            <div key={index} className='grid py-4 text-gray-700 border-t border-b grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4'>
-              <div className='flex items-start gap-6'>
-                <img className='w-16 sm:w-20' src={productData.image[0]} alt="Product" />
-                <div>
-                  <p className='text-sm font-medium sm:text-lg'>{productData.name}</p>
-                  <div className='flex items-center gap-5 mt-2'>
-                    <p>
-                      {currency}&nbsp;{productData.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className='px-2 border sm:px-3 sm:py-1 bg-slate-50'>{item.size}</p>
-                  </div>
+        {/* ✅ Map directly over the detailed cart data. No more .find()! */}
+        {cartDetails.map((item, index) => (
+          <div key={`${item._id}-${item.size}`} className='grid py-4 text-gray-700 border-t border-b grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4'>
+            <div className='flex items-start gap-6'>
+              <img className='w-16 sm:w-20' src={item.image} alt="Product" />
+              <div>
+                <p className='text-sm font-medium sm:text-lg'>{item.name}</p>
+                <div className='flex items-center gap-5 mt-2'>
+                  <p>
+                    {currency}&nbsp;{item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className='px-2 border sm:px-3 sm:py-1 bg-slate-50'>{item.size}</p>
                 </div>
               </div>
-              <input
-                onChange={(e) => e.target.value === '' || e.target.value === '0' ? null : updateQuantity(item._id, item.size, Number(e.target.value))}
-                className='px-1 py-1 border max-w-10 sm:max-w-20 sm:px-2'
-                type="number"
-                min={1}
-                defaultValue={item.quantity}
-              />
-              <img
-                onClick={() => updateQuantity(item._id, item.size, 0)}
-                className='w-4 mr-4 cursor-pointer sm:w-5'
-                src={bin_icon} 
-                alt="Remove"
-              />
             </div>
-          );
-        })}
+            <input
+              onChange={(e) => handleUpdateQuantity(item._id, item.size, Number(e.target.value))}
+              className='px-1 py-1 border max-w-10 sm:max-w-20 sm:px-2'
+              type="number"
+              min={1}
+              value={item.quantity}
+            />
+            <img
+              onClick={() => handleUpdateQuantity(item._id, item.size, 0)} // Set quantity to 0 to remove
+              className='w-4 mr-4 cursor-pointer sm:w-5'
+              src={bin_icon}
+              alt="Remove"
+            />
+          </div>
+        ))}
       </div>
       <div className='flex justify-end my-20'>
         <div className='w-full sm:w-[450px]'>
@@ -104,7 +91,7 @@ const Cart = () => {
               PROCEED TO CHECKOUT
             </button>
           </div>
-        </div> 
+        </div>
       </div>
     </div>
   );

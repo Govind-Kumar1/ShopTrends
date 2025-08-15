@@ -1,20 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
-import { ShopContext } from "../context/ShopContext";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux"; // ✅ Import the useSelector hook
 import Title from "./Title";
-import ProductItem from "./ProductItem";
+import ProductItem from "./ProductItem"; 
 
 const LatestCollection = () => {
-  const { products } = useContext(ShopContext);
+  // ✅ Get the products list from the Redux store
+  const { list: products } = useSelector((state) => state.products);
   const [latestProducts, setLatestProducts] = useState([]);
-
+  //  console.log("inside latest collection", products);
   useEffect(() => {
     if (products.length > 0) {
-      // ✅ Shuffle and pick 10 random products
+      // Shuffle and pick 10 random products
       const shuffled = [...products].sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, 10);
       setLatestProducts(selected);
     }
-  }, [products]);
+  }, [products]); // This dependency on products from Redux works perfectly
 
   return (
     <div className="my-10">
@@ -43,4 +44,3 @@ const LatestCollection = () => {
 };
 
 export default LatestCollection;
-     

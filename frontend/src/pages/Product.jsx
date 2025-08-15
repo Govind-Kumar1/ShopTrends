@@ -1,52 +1,74 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShopContext } from '../context/ShopContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+
+// Import Redux actions and thunks
+import { fetchProductById, clearCurrentProduct } from '../slices/features/productsSlice';
+import { addToCart } from '../slices/features/cartSlice';
+
+// Import components and assets
 import RelatedProducts from '../components/RelatedProducts';
 import star_icon from '../assets/star_icon.png';
 import star_dull_icon from '../assets/star_dull_icon.png';
-import { toast } from 'react-toastify'; 
 
 const Product = () => {
-  const { productId } = useParams();
-  const { products, currency, addToCart } = useContext(ShopContext);
-  const [productData, setProductData] = useState(null);
+  // ✅ Map whatever param your route has to productId
+  const { productId: paramProductId, id: paramId } = useParams();
+  const productId = paramProductId || paramId;
+
+  const dispatch = useDispatch();
+  const { currentProduct: product, status, error } = useSelector((state) => state.products);
+  const currency = '$';
+
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
 
   useEffect(() => {
-    if (products.length > 0) {
-      const product = products.find((item) => item._id === productId);
-      if (product) {
-        setProductData(product);
-        setImage(product.image[0]);
-      }
+    if (productId) {
+      dispatch(fetchProductById(productId));
     }
-  }, [productId, products]);
-  
-  if (!productData) {
-    return (
-      <div className='py-20 text-center text-gray-500'>
-        Loading product...
-      </div>
-    );
+    return () => {
+      dispatch(clearCurrentProduct());
+    };
+  }, [productId, dispatch]);
+
+  useEffect(() => {
+    if (product?.image) {
+      setImage(product.image[0]);
+    }
+  }, [product]);
+
+  const handleAddToCart = () => {
+    if (!size) {
+      toast.error('Please select a size');
+      return;
+    }
+    dispatch(addToCart({ itemId: product._id, size }));
+    toast.success('Item added to cart!');
+  };
+
+  if (status === 'loading') {
+    return <div className='py-20 text-center text-gray-500'>Loading product...</div>;
+  }
+  if (status === 'failed' || !product) {
+    return <div className='py-20 text-center text-red-500'>Error: {error || 'Product not found.'}</div>;
   }
 
   return (
     <div className='pt-10 transition-opacity duration-500 ease-in border-t-2 opacity-100'>
-      {/* Product Data */}
       <div className='flex flex-col gap-12 sm:gap-12 sm:flex-row'>
-        {/* Product Images */}
         <div className='flex flex-col-reverse flex-1 gap-3 sm:flex-row'>
           <div className='flex justify-between overflow-x-auto sm:flex-col sm:overflow-y-scroll sm:justify-normal sm:w-[18.7%] w-full'>
-            {productData.image.map((item, index) => (
+            {product.image.map((item, index) => (
               <img
                 src={item}
                 key={index}
                 onClick={() => setImage(item)}
                 className={`w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer ${
-                  image === item ? 'border-2 border-gray-600 py-2 px-2' : ''
+                  image === item ? 'border-2 border-gray-600 p-1' : ''
                 }`}
-                alt="Photo"
+                alt="Product Thumbnail"
               />
             ))}
           </div>
@@ -55,9 +77,8 @@ const Product = () => {
           </div>
         </div>
 
-        {/* Product Info */}
         <div className='flex-1'>
-          <h1 className='mt-2 text-2xl font-medium'>{productData.name}</h1>
+          <h1 className='mt-2 text-2xl font-medium'>{product.name}</h1>
           <div className='flex items-center gap-1 mt-2'>
             {[1, 2, 3, 4].map((i) => (
               <img key={i} src={star_icon} alt="Star" className="w-4" />
@@ -66,17 +87,14 @@ const Product = () => {
             <p className='pl-2'>(122)</p>
           </div>
           <p className='mt-5 text-3xl font-medium'>
-            {currency}
-            {productData.price}
+            {currency}{product.price.toFixed(2)}
           </p>
-          <p className='mt-5 text-gray-500 md:w-4/5'>
-            {productData.description}
-          </p>
+          <p className='mt-5 text-gray-500 md:w-4/5'>{product.description}</p>
 
           <div className='flex flex-col gap-4 my-8'>
             <p className='font-semibold'>Select Size</p>
             <div className='flex gap-2'>
-              {productData.sizes.map((item, index) => (
+              {product.sizes.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => setSize(item)}
@@ -91,13 +109,7 @@ const Product = () => {
           </div>
 
           <button
-            onClick={() => {
-              if (!size) {
-                toast.error('Please select a size');
-                return;
-              }
-              addToCart(productData._id, size);
-            }}
+            onClick={handleAddToCart}
             className='px-8 py-3 text-sm text-white bg-black active:bg-gray-700'
           >
             ADD TO CART
@@ -113,7 +125,6 @@ const Product = () => {
         </div>
       </div>
 
-      {/* Description and Review Section */}
       <div className='mt-20'>
         <div className='flex'>
           <b className='px-5 py-3 text-sm border'>Description</b>
@@ -135,10 +146,10 @@ const Product = () => {
         </div>
       </div>
 
-      {/* Related Products */}
       <RelatedProducts
-        category={productData.category}
-        subCategory={productData.subCategory}
+        category={product.category}
+        subCategory={product.subCategory}
+        currentProductId={product._id}
       />
     </div>
   );

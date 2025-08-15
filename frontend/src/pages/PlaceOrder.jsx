@@ -1,101 +1,118 @@
-import React, { useContext, useState } from 'react'
-import Title from '../components/Title'
-import CartTotal from '../components/CartTotal'
-import { ShopContext } from '../context/ShopContext'
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { selectCartDetails, selectCartTotalAmount } from '../selectors/cartSelectors';
+import { placeOrder } from '../slices/features/orderSlice';
+import CartTotal from '../components/CartTotal';
+import Title from '../components/Title';
+
+// Import Components, Selectors, and Actions
+// import Title from '../components/Title';
+// import CartTotal from '../components/CartTotal';
+// import { selectCartDetails, selectCartTotalAmount } from '../selectors/cartSelectors';
+// import { placeOrder } from '../slices/orderSlice';
+// import { clearCart } from '../slices/cartSlice';
 
 const PlaceOrder = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [method, setMethod] = useState('cod');
-  const {navigate} = useContext(ShopContext);
+  // Get cart data and total amount from Redux
+  const cartItems = useSelector(selectCartDetails);
+  const subTotal = useSelector(selectCartTotalAmount);
+  const deliveryFee = subTotal > 0 ? 10 : 0;
+
+  // State to manage the delivery information form
+  const [data, setData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    street: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    country: "",
+    phone: ""
+  });
+
+  // Handler to update form data as the user types
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setData(prevData => ({ ...prevData, [name]: value }));
+  };
+
+  // Function to handle the order placement
+  const handlePlaceOrder = async (event) => {
+    event.preventDefault(); // Prevent default form submission
+
+    const orderData = {
+      address: data,
+      items: cartItems,
+      amount: subTotal + deliveryFee,
+    };
+
+    try {
+      // Dispatch the placeOrder thunk and wait for it to complete
+      await dispatch(placeOrder(orderData)).unwrap();
+
+      // If successful, clear the cart state and navigate
+      dispatch(clearCart());
+      toast.success("Order Placed Successfully!");
+      navigate("/orders");
+
+    } catch (error) {
+      toast.error(error || "Failed to place order. Please try again.");
+    }
+  };
   
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (subTotal === 0) {
+      navigate('/cart');
+    }
+  }, [subTotal, navigate]);
+
+
   return (
-    <div className='flex flex-col justify-between gap-4 pt-5 sm:flex-row sm:pt-14 min-h-[80vh] border-t'>
-      {/* Left Side Content */}
-      <div className='flex flex-col w-full gap-4 sm:max-w-[480px]'>
+    <form onSubmit={handlePlaceOrder} className='flex flex-col justify-between gap-10 pt-10 sm:flex-row sm:pt-14 min-h-[80vh] border-t'>
+      
+      {/* Left Side - Delivery Information */}
+      <div className='flex flex-col w-full gap-4 sm:max-w-xl'>
         <div className='my-3 text-xl sm:text-2xl'>
           <Title text1={'DELIVERY'} text2={'INFORMATION'} />
         </div>
         <div className='flex gap-3'>
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="text" 
-            placeholder='First Name' 
-          />
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="text" 
-            placeholder='Last Name' 
-          />
+          <input required name='firstName' onChange={onChangeHandler} value={data.firstName} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='First Name' />
+          <input required name='lastName' onChange={onChangeHandler} value={data.lastName} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='Last Name' />
         </div>
-        <input 
-          className='w-full px-4 py-2 border border-gray-300 rounded' 
-          type="email" 
-          placeholder='Email Address' 
-        />
-        <input 
-          className='w-full px-4 py-2 border border-gray-300 rounded' 
-          type="text" 
-          placeholder='Street' 
-        />
+        <input required name='email' onChange={onChangeHandler} value={data.email} className='w-full px-4 py-2 border border-gray-300 rounded' type="email" placeholder='Email Address' />
+        <input required name='street' onChange={onChangeHandler} value={data.street} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='Street' />
         <div className='flex gap-3'>
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="text" 
-            placeholder='City' 
-          />
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="text" 
-            placeholder='State' 
-          />
+          <input required name='city' onChange={onChangeHandler} value={data.city} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='City' />
+          <input required name='state' onChange={onChangeHandler} value={data.state} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='State' />
         </div>
         <div className='flex gap-3'>
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="number" 
-            placeholder='Zip Code' 
-          />
-          <input 
-            className='w-full px-4 py-2 border border-gray-300 rounded' 
-            type="text" 
-            placeholder='Country' 
-          />
+          <input required name='zipcode' onChange={onChangeHandler} value={data.zipcode} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='Zip Code' />
+          <input required name='country' onChange={onChangeHandler} value={data.country} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='Country' />
         </div>
-        <input 
-          className='w-full px-4 py-2 border border-gray-300 rounded' 
-          type="number" 
-          placeholder='Mobile' 
-        />
+        <input required name='phone' onChange={onChangeHandler} value={data.phone} className='w-full px-4 py-2 border border-gray-300 rounded' type="text" placeholder='Mobile' />
       </div>
-      {/* Right Side Content */}
-      <div className='mt-8'>
+
+      {/* Right Side - Cart Totals & Place Order Button */}
+      <div className='flex-1 w-full'>
         <div className='mt-8 min-w-80'>
           <CartTotal />
-        </div>
-        {/* Payment Methods Selection */}
-        <div className='mt-12'>
-          <Title text1={'PAYMENT'} text2={'METHODS'} />
-          <div className='flex flex-col gap-3 lg:flex-row'>
-            <div onClick={() => setMethod('stripe')} className='flex items-center gap-3 p-2 px-3 border cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-600' : ''}`}></p>
-              <img className='h-5 mx-4' src={assets.stripe_logo} alt="Stripe" />
-            </div>
-            <div onClick={() => setMethod('razorpay')} className='flex items-center gap-3 p-2 px-3 border cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-600' : ''}`}></p>
-              <img className='h-5 mx-4' src={assets.razorpay_logo} alt="RazorPay" />
-            </div>
-            <div onClick={() => setMethod('cod')} className='flex items-center gap-3 p-2 px-3 border cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-green-600' : ''}`}></p>
-              <p className='mx-4 text-sm font-medium text-gray-500'>CASH ON DELIVERY</p>
-            </div>
-          </div>
           <div className='w-full mt-8 text-end'>
-            <button onClick={() => navigate('/orders')} className='px-16 py-3 text-sm text-white bg-black active:bg-gray-800'>PLACE ORDER</button>
+            <button type='submit' className='w-full px-16 py-3 text-sm text-white bg-black sm:w-auto active:bg-gray-800'>
+              PLACE ORDER
+            </button>
           </div>
         </div>
       </div>
-    </div>
+
+    </form>
   )
 }
 
-export default PlaceOrder
+export default PlaceOrder;

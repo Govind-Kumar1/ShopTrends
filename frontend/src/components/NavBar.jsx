@@ -1,12 +1,15 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { ShopContext } from '../context/ShopContext';
+import { useDispatch, useSelector } from 'react-redux'; // ✅ Import Redux hooks
 import { toast } from 'react-toastify';
 
-// ✅ Components
-import SearchBar from './SearchBar';
+// ✅ Import Redux Actions and Selectors
+import { setShowSearch } from '../slices/features/uiSlice';
+import { clearCart } from '../slices/features/cartSlice';
+import { clearToken } from '../slices/features/userSlice';
+import { selectCartCount } from '../selectors/cartSelectors';
 
-// ✅ Assets
+// ✅ Assets 
 import logo from "../assets/logo.png";
 import search_icon from "../assets/search_icon.png";
 import dropdown_icon from "../assets/dropdown_icon.png";
@@ -17,29 +20,22 @@ import menu_icon from "../assets/menu_icon.png";
 const NavBar = () => {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ✅ Get the dispatch function
 
-  // Destructure token and setToken from context for reactive state management
-  const {
-    clearCart,
-    setShowSearch,
-    getCartCount,
-    token,
-    setToken
-  } = useContext(ShopContext);
-console.log(token)
+  // ✅ Get state and derived data from the Redux store
+  const token = useSelector((state) => state.user.token);
+  const cartCount = useSelector(selectCartCount);
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setToken(null); // Update the global context state, triggering a re-render
-    clearCart();
+    dispatch(clearToken()); // ✅ Dispatches action to clear token from state and localStorage
+    dispatch(clearCart());  // ✅ Dispatches action to clear the cart
     toast.success("Logged out successfully 👋");
     navigate("/");
-  }; 
+  };
 
   return (
     <>
-      {/* ✅ Reusable SearchBar Component */}
-      <SearchBar />
-
+      {/* SearchBar is now rendered in App.jsx, so it's removed from here to avoid duplication */}
       <div className='flex items-center justify-between py-5 font-medium relative z-50 bg-white'>
         {/* Logo */}
         <Link to='/'>
@@ -66,7 +62,7 @@ console.log(token)
         <div className='flex items-center gap-6'>
           {/* Search */}
           <img
-            onClick={() => setShowSearch(true)}
+            onClick={() => dispatch(setShowSearch(true))} // ✅ Dispatch action
             src={search_icon}
             className='w-5 cursor-pointer'
             alt="Search"
@@ -77,11 +73,10 @@ console.log(token)
             <img src={profile_icon} className='w-5 cursor-pointer' alt="Profile" />
             <div className='absolute right-0 pt-4 hidden group-hover:block'>
               <div className='flex flex-col gap-2 px-5 py-3 text-gray-500 rounded w-36 bg-slate-100 shadow-md'>
-                {/* UI now correctly reacts to changes in the token from context */}
+                {/* ✅ UI reacts to the token from the Redux store */}
                 {token ? (
                   <>
-                    <p className='cursor-pointer hover:text-black'>Profile</p>
-                    <p className='cursor-pointer hover:text-black'>Orders</p>
+                    <p onClick={() => navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
                     <p onClick={handleLogout} className='cursor-pointer hover:text-black'>Logout</p>
                   </>
                 ) : (
@@ -95,7 +90,7 @@ console.log(token)
           <Link to='/cart' className='relative'>
             <img src={cart_icon} className='w-5 min-w-5' alt="Cart" />
             <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>
-              {getCartCount()}
+              {cartCount} {/* ✅ Use the value from the selector */}
             </p>
           </Link>
 

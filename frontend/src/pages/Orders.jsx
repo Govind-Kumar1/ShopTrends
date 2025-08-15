@@ -1,45 +1,59 @@
-import React, { useContext } from 'react'
-import { ShopContext } from '../context/ShopContext'
-import Title from '../components/Title'
-
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchOrders } from '../slices/features/orderSlice';
+import Title from '../components/Title';
+ 
 const Orders = () => {
+  const dispatch = useDispatch();
+  const { list: orders, status } = useSelector((state) => state.orders);
+  const currency = '$';
 
-  const {products, currency} = useContext(ShopContext);
+  useEffect(() => {
+    dispatch(fetchOrders());
+  }, [dispatch]);
+
+  if (status === 'loading') {
+    return <p className="text-center py-20">Loading your orders...</p>;
+  }
+  
+  if (status === 'succeeded' && orders.length === 0) {
+    return <p className="text-center py-20">You have no past orders.</p>
+  }
 
   return (
     <div className='pt-16 border-t'>
       <div className='text-2xl'>
         <Title text1={'YOUR'} text2={'ORDERS'} />
       </div>
-      <div>
-        {
-          products.slice(1, 4).map((item, index) => (
-            <div key={index} className='flex flex-col gap-4 py-4 text-gray-700 border-t border-b md:flex-row md:items-center md:justify-between'>
-              <div className='flex items-start gap-6 text-sm'>
-                <img className='w-16 sm:w-20' src={item.image[0]} alt="Photo" />
-                <div>
-                  <p className='font-medium sm:text-base'>{item.name}</p>
-                  <div className='flex items-center gap-3 mt-2 text-base text-gray-700'>
-                    <p className='text-lg'>{currency}&nbsp;{item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                    <p>Quantity:&nbsp;1</p>
-                    <p>Size:&nbsp;M</p>
-                  </div>
-                  <p className='mt-2'>Date:&nbsp;<span className='text-gray-400'>25 JUL 2024</span></p>
-                </div>
-              </div>
-              <div className='flex justify-between md:w-1/2'>
-                <div className='flex items-center gap-2'>
-                  <p className='h-2 bg-green-500 rounded-full min-w-2'></p>
-                  <p className='text-sm md:text-base'>Ready for Shipping</p>
-                </div>
-                <button className='px-4 py-2 text-sm font-medium border rounded-sm'>TRACK ORDER</button>
-              </div>
+      <div className='flex flex-col gap-5 mt-5'>
+        {orders.map((order) => (
+          <div key={order._id} className='p-4 border rounded-md shadow-sm'>
+            <div className="flex justify-between items-center mb-4">
+                <p className="font-semibold">Order ID: <span className="font-normal text-gray-600">{order._id}</span></p>
+                <p className="font-semibold">Date: <span className="font-normal text-gray-600">{new Date(order.date).toLocaleDateString()}</span></p>
             </div>
-          ))
-        }
+            {order.items.map((item, index) => (
+              <div key={index} className='flex items-center gap-4 py-3 border-t'>
+                <img className='w-16 h-16 object-cover rounded' src={item.image} alt="Product" />
+                <div>
+                  <p className='font-medium'>{item.name}</p>
+                  <p className='text-sm text-gray-600'>Size: {item.size} | Qty: {item.quantity}</p>
+                  <p className='text-sm'>{currency}{item.price.toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between items-center mt-4 text-sm">
+                <div className='flex items-center gap-2'>
+                    <p className={`h-2 min-w-2 rounded-full ${order.status === 'Delivered' ? 'bg-green-500' : 'bg-orange-500'}`}></p>
+                    <p>{order.status}</p>
+                </div>
+                <p className="font-bold text-lg">{currency}{order.amount.toFixed(2)}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Orders
+export default Orders;
